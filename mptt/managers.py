@@ -758,9 +758,21 @@ class TreeManager(_tree_manager_superclass):
         Determines the next largest unused tree id for the tree managed
         by this manager.
         """
-        max_tree_id = list(self.aggregate(Max(self.tree_id_attr)).values())[0]
-        max_tree_id = max_tree_id or 0
-        return max_tree_id + 1
+        sequence_name = 'mptt_tree_id_seq'
+
+        # Query the database for the next sequence value.
+        from django.db import connection
+        cursor = self._get_connection().cursor()
+        cursor.execute("SELECT nextval('mptt_tree_id_seq')")
+        row = cursor.fetchone()
+
+        # Update the data object's ID with the returned sequence value.
+        return row[0]
+
+        #max_tree_id = list(self.aggregate(Max(self.tree_id_attr)).values())[0]
+        #max_tree_id = max_tree_id or 0
+
+        #return max_tree_id + 1
 
     def _inter_tree_move_and_close_gap(
             self, node, level_change,
